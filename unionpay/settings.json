@@ -1,0 +1,28 @@
+{
+    "UnionPay":{
+        "encrypt": {
+            "certPath": "",
+            "CVN2": 0,
+            "Exp": 0,
+            "PAN": 0
+        },
+        "sign": {
+            "certPath": "/etc/unionpay/700000000000001_acp.pfx",
+            "password": "000000"
+        },
+        "verify": {
+            "certPath": ""
+        },
+        "url": {
+            "frontEndRequest": "https://101.231.204.80:5000/gateway/api/frontTransReq.do",
+            "backEndRequest": "https://101.231.204.80:5000/gateway/api/backTransReq.do",
+            "batchRequest": "https://101.231.204.80:5000/gateway/api/batchTrans.do",
+            "singleQuery": "https://101.231.204.80:5000/gateway/api/queryTrans.do",
+            "fileQuery": "https://101.231.204.80:9080/",
+            "byCard": "https://101.231.204.80:5000/gateway/api/cardTransReq.do",
+            "byApp": "https://101.231.204.80:5000/gateway/api/appTransReq.do",
+            "notifyFrontEnd": "",
+            "notifyBackEnd": ""
+        }
+    }
+}
