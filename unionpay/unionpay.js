@@ -25,12 +25,46 @@ function getSignP12() {
   return p12;
 }
 
+function hex2int(h) {
+  function carry(x) {
+    var i = 0;
+    while (i < x.length) {
+      if (x[i] >= 10) {
+        if (i + 1 === x.length) {
+          x[i + 1] = 0;
+        }
+        x[i + 1] += parseInt(x[i] / 10);
+        x[i] = parseInt(x[i] % 10);
+      }
+      ++i;
+    }
+  }
+  function add(x, y) {
+    x[0] += y;
+    carry(x);
+  }
+  function mul(x, y) {
+    for (var i = 0; i < x.length; ++i) {
+      x[i] *= y;
+    }
+    carry(x);
+  }
+  ans = [0];
+  for (var i = 0; i < h.length; ++i) {
+    var t = parseInt(h[i], 16);
+    mul(ans, 16);
+    add(ans, t);
+  }
+  return ans.reverse().join('');
+}
+
 function getSignSN() {
   var p12 = getSignP12();
   var x509 = p12.getBags({bagType: forge.pki.oids.certBag});
   //console.log(forge.pki.oids['1.2.840.113549.1.12.10.1.2']);
   x509 = _.values(x509)[0][0];
   var sn = x509.cert.serialNumber;
+  sn = hex2int(sn);
   return sn;
 };
 
@@ -61,7 +95,9 @@ function encryptCertId() {
   var pem = fs.readFileSync(certPath);
   var cert = pki.certificateFromPem(pem);
   var sn = cert.serialNumber;
-  //console.log(sn);
+  console.log('encrypt cert id:');
+
+  console.log(sn);
   return sn;
 }
 
@@ -89,9 +125,14 @@ function sign(params) {
   params.signature = signature;
 }
 
+console.log('---------');
+var sn = getSignSN();
+console.log(sn);
+
 var params = {
   version: '5.0.0',
-  certId: getSignSN(),
+  encoding: 'GBK',
+  certId: sn,
   signMethod: '01',
   txnType: '72',
   txnSubType: '01',
@@ -101,29 +142,33 @@ var params = {
   backUrl: Meteor.settings.UnionPay.url.backEndRequest,
   accessType: '0',
   merId: '777290058119350',
-  subMerId: '',
-  subMerName: '',
-  subMerAbbr: '',
   orderId: moment().format('YYYYMMDDHHmmss'),
   txnTime: moment().format('YYYYMMDDHHmmss'),
   accType: '01',
   accNo: accNo(),
   customerInfo: customerInfo(),
-  reqReserved: '',
-  reserved: '',
-  riskRateInfo: '',
-  encryptCertId: encryptCertId(),
-  userMac: '',
   relTxnType: '02',
   payCardType: '01',
-  issInsCode: ''
 };
 
 sign(params);
 
-console.log(params);
+function urlencode(params) {
+  var keys = _.keys(params).sort();
+  var ans = '';
+  _.each(keys, function(key) {
+    ans += key + '=' + encodeURIComponent(params[key]) + '&';
+  });
+  ans = ans.slice(0, -1);
+  return ans;
+}
 
-result = HTTP.post(Meteor.settings.UnionPay.url.backEndRequest, {data: params, headers: {'Content-type': 'application/x-www-form-urlencoded', 'charset': 'UTF-8', timeout: 5000}});
+try {
+  result = HTTP.post(Meteor.settings.UnionPay.url.backEndRequest, {params: params, timeout:5000, npmRequestOptions:{strictSSL:false}});
+  console.log(result);
+} catch (e) {
+  console.log(e);
+  console.log(e.code);
+  console.log(e.stack);
+}
 
-
-console.log(result);
