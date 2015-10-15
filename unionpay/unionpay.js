@@ -55,7 +55,6 @@ function hex2int(h) {
 function getSignSN() {
   var p12 = getP12();
   var x509 = p12.getBags({bagType: forge.pki.oids.certBag});
-  //console.log(forge.pki.oids['1.2.840.113549.1.12.10.1.2']);
   x509 = _.values(x509)[0][0];
   var sn = x509.cert.serialNumber;
   sn = hex2int(sn);
@@ -72,7 +71,6 @@ function getPrivateKey() {
 function customerInfo() {
   var ans = '{smsCode=111111&phoneNo=13552535506&customerNm=全渠道}';
   ans = new Buffer(ans).toString('base64');
-  console.log('customerInfo:' + ans);
   return ans;
 }
 
@@ -89,9 +87,7 @@ function encryptCertId() {
   var pem = fs.readFileSync(certPath);
   var cert = pki.certificateFromPem(pem);
   var sn = cert.serialNumber;
-  console.log('encrypt cert id:');
 
-  console.log(sn);
   return sn;
 }
 
@@ -108,29 +104,23 @@ function obj2str(params) {
 function sign(params) {
   var params_str = obj2str(params);
   var md = forge.md.sha1.create();
-  console.log('params_str>' + params_str);
   md.update(params_str);
   var sha1 = md.digest().toHex();
 
-  console.log('sha1>' + sha1);
   md = forge.md.sha1.create();
   md.update(sha1);
 
   var privateKey = getPrivateKey();
   var ans = privateKey.sign(md);
   signature = forge.util.encode64(ans);
-  //console.log(signature);
 
   params.signature = signature;
 }
 
-var sn = getSignSN();
-console.log(sn);
-
 var params = {
   version: '5.0.0',
   encoding: 'UTF-8',
-  certId: sn,
+  certId: getSignSN(),
   signMethod: '01',
   txnType: '72',
   txnSubType: '01',
@@ -162,14 +152,10 @@ function urlencode(params) {
 }
 
 try {
-  console.log(params);
-
-  //result = HTTP.post(Meteor.settings.UnionPay.url.backEndRequest, {params: params, timeout:5000, npmRequestOptions:{strictSSL:false}});
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   result = HTTP.call('POST', Meteor.settings.UnionPay.url.backEndRequest, {timeout:6000, params: params, npmRequestOptions:npmRequestOptions});
   console.log(result);
 } catch (e) {
-  console.log(e);
   console.log(e.code);
   console.log(e.stack);
 }
