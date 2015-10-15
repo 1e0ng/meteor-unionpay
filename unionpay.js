@@ -1,6 +1,3 @@
-// Write your package code here!
-console.log(Meteor.settings.UnionPay.encrypt.PAN);
-
 var npmRequestOptions = {agentOptions: {secureProtocol: 'SSLv3_method',ciphers:'RC4:HIGH:!MD5:!aNULL:!EDH'}};
 
 //////////////////
