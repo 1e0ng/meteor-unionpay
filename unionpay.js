@@ -6,38 +6,56 @@ class UnionPay {
       encoding: 'UTF-8',
       certId: this._getSignSN(),
       signMethod: '01',
-      txnType: '72',
-      txnSubType: '01',
-      bizType: '000201',
-      channelType: '07',
       backUrl: Meteor.settings.UnionPay.url.trans,
-      accessType: '0',
-      merId: '777290058119350',
-      orderId: moment().format('YYYYMMDDHHmmss'),
-      txnTime: moment().format('YYYYMMDDHHmmss'),
-      accType: '01',
-      accNo: this._accNo(),
-      customerInfo: this._customerInfo(),
-      relTxnType: '02',
-      payCardType: '01'
+      accessType: Meteor.settings.UnionPay.accessType,
+      merId: Meteor.settings.UnionPay.merId
     };
   }
+  customerInfo(params) {
+    var ans = '{' + this._obj2str(params) + '}';
+    ans = new Buffer(ans).toString('base64');
+    return ans;
+  }
+
   build(params) {
     _.extend(this._params, params);
     this._sign(this._params);
   }
   request() {
     try {
-      console.log(this._params);
-      console.log(this._npmRequestOptions);
       result = HTTP.call('POST', Meteor.settings.UnionPay.url.trans, {timeout:6000, params: this._params, npmRequestOptions:this._npmRequestOptions});
-      console.log(result);
+      if (result.statusCode == '200') {
+        var content = result.content;
+        var res = this._parseParams(content);
+
+        if (!this._verify(res)) {
+          throw 'Signature verification faild.';
+        }
+        if (res.respCode !== '00') {
+          throw 'Resp error, code <' + res.respCode + '>, msg <' + res.respMsg + '>';
+        }
+      }
+      else {
+        throw 'Status Code:<' + result.statusCode + '>';
+      }
       return true;
     } catch (e) {
-      console.log(e.code);
-      console.log(e.stack);
+      console.log(e);
+      if (e.code) {
+        console.log(e.code);
+        console.log(e.stack);
+      }
       return false;
     }
+  }
+
+  _parseParams(params_str) {
+    var ans = {};
+    _.each(params_str.split('&'), function(item) {
+      var i = item.indexOf('=');
+      ans[item.slice(0, i)] = item.slice(i+1);
+    });
+    return ans;
   }
 
   _hex2int(h) {
@@ -73,7 +91,7 @@ class UnionPay {
     return ans.reverse().join('');
   }
   _getSignSN() {
-    var p12 = this._getP12();
+    var p12 = this._getSignP12();
     var x509 = p12.getBags({bagType: forge.pki.oids.certBag});
     x509 = _.values(x509)[0][0];
     var sn = x509.cert.serialNumber;
@@ -82,33 +100,18 @@ class UnionPay {
   }
 
   _getPrivateKey() {
-    var p12 = this._getP12();
+    var p12 = this._getSignP12();
     var bag = p12.getBags({bagType: forge.pki.oids.pkcs8ShroudedKeyBag});
     var ans = _.values(bag)[0][0].key;
     return ans;
   }
 
-  _customerInfo() {
-    var ans = '{phoneNo=13552535506&customerNm=全渠道}';
-    ans = new Buffer(ans).toString('base64');
-    return ans;
-  }
-
-  _accNo() {
-    accNo = '6216261000000000018';
-    return accNo;
-  }
-
-  _encryptCertId() {
+  _getPublicKey(path) {
     var pki = forge.pki;
-    var certPath = Meteor.settings.UnionPay.encrypt.certPath;
-
     var fs = Npm.require('fs');
-    var pem = fs.readFileSync(certPath);
+    var pem = fs.readFileSync(path);
     var cert = pki.certificateFromPem(pem);
-    var sn = cert.serialNumber;
-
-    return sn;
+    return cert.publicKey;
   }
 
   _obj2str(params) {
@@ -124,11 +127,11 @@ class UnionPay {
   _sign(params) {
     var params_str = this._obj2str(params);
     var md = forge.md.sha1.create();
-    md.update(params_str);
+    md.update(params_str, 'utf8');
     var sha1 = md.digest().toHex();
 
     md = forge.md.sha1.create();
-    md.update(sha1);
+    md.update(sha1, 'utf8');
 
     var privateKey = this._getPrivateKey();
     var ans = privateKey.sign(md);
@@ -136,7 +139,25 @@ class UnionPay {
 
     params.signature = signature;
   }
-  _getP12() {
+
+  _verify(params) {
+    var sig = forge.util.decode64(params['signature']);
+    delete params['signature'];
+
+    var params_str = this._obj2str(params);
+    var publicKey = this._getPublicKey(Meteor.settings.UnionPay.verify.certPath);
+    var md = forge.md.sha1.create();
+    md.update(params_str, 'utf8');
+    var sha1 = md.digest().toHex();
+
+    md = forge.md.sha1.create();
+    md.update(sha1, 'utf8');
+
+    var ans = publicKey.verify(md.digest().bytes(), sig);
+    return ans;
+  }
+
+  _getSignP12() {
     var certPath = Meteor.settings.UnionPay.sign.certPath;
     var password = Meteor.settings.UnionPay.sign.password;
 
@@ -149,9 +170,25 @@ class UnionPay {
 
     return p12;
   }
-
 }
 
 var up = new UnionPay;
-up.build({});
+var customerInfo = up.customerInfo({
+  phoneNo: '13552535506',
+  customerNm: '全渠道'
+});
+var params = {
+  txnType: '72',
+  txnSubType: '01',
+  bizType: '000201',
+  channelType: '07',
+  orderId: moment().format('YYYYMMDDHHmmss'),
+  txnTime: moment().format('YYYYMMDDHHmmss'),
+  accNo: '6216261000000000018',
+  customerInfo: customerInfo,
+  relTxnType: '02',
+  payCardType: '01'
+};
+
+up.build(params);
 up.request();

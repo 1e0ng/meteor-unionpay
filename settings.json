@@ -1,5 +1,7 @@
 {
     "UnionPay":{
+        "merId": "777290058119350",
+        "accessType": "0",
         "encrypt": {
             "certPath": "/etc/unionpay/encrypt.cer",
             "CVN2": 0,
