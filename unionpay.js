@@ -66,7 +66,7 @@ function getPrivateKey() {
 }
 
 function customerInfo() {
-  var ans = '{smsCode=111111&phoneNo=13552535506&customerNm=全渠道}';
+  var ans = '{phoneNo=13552535506&customerNm=全渠道}';
   ans = new Buffer(ans).toString('base64');
   return ans;
 }
@@ -123,8 +123,7 @@ var params = {
   txnSubType: '01',
   bizType: '000201',
   channelType: '07',
-  frontUrl: Meteor.settings.UnionPay.url.frontEndRequest,
-  backUrl: Meteor.settings.UnionPay.url.backEndRequest,
+  backUrl: Meteor.settings.UnionPay.url.trans,
   accessType: '0',
   merId: '777290058119350',
   orderId: moment().format('YYYYMMDDHHmmss'),
@@ -138,19 +137,9 @@ var params = {
 
 sign(params);
 
-function urlencode(params) {
-  var keys = _.keys(params).sort();
-  var ans = '';
-  _.each(keys, function(key) {
-    ans += key + '=' + encodeURIComponent(params[key]) + '&';
-  });
-  ans = ans.slice(0, -1);
-  return ans;
-}
-
 try {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-  result = HTTP.call('POST', Meteor.settings.UnionPay.url.backEndRequest, {timeout:6000, params: params, npmRequestOptions:npmRequestOptions});
+  result = HTTP.call('POST', Meteor.settings.UnionPay.url.trans, {timeout:6000, params: params, npmRequestOptions:npmRequestOptions});
   console.log(result);
 } catch (e) {
   console.log(e.code);

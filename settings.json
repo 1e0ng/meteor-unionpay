@@ -14,8 +14,7 @@
             "certPath": "/etc/unionpay/verify_sign_acp.cer"
         },
         "url": {
-            "frontEndRequest": "https://101.231.204.80:5000/gateway/api/frontTransReq.do",
-            "backEndRequest": "https://101.231.204.80:5000/gateway/api/backTransReq.do",
+            "trans": "https://101.231.204.80:5000/gateway/api/backTransReq.do",
             "batchRequest": "https://101.231.204.80:5000/gateway/api/batchTrans.do",
             "singleQuery": "https://101.231.204.80:5000/gateway/api/queryTrans.do",
             "fileQuery": "https://101.231.204.80:9080/",
