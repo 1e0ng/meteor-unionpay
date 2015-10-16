@@ -18,11 +18,13 @@ Package.onUse(function(api) {
   api.use('momentjs:moment');
   api.use('lsun:meteor-node-forge');
   api.addFiles('unionpay.js');
+  api.export('UnionPay');
 });
 
 Package.onTest(function(api) {
   api.use('ecmascript');
   api.use('tinytest');
+  api.use('momentjs:moment');
   api.use('lsun:unionpay');
   api.addFiles('unionpay-tests.js');
 });
