@@ -7,6 +7,15 @@
 meteor add lsun:unionpay
 ```
 
+
+Copy pfx and cer files or download your own files to `/etc/unionpay/` (this is set
+in settings.json file).
+
+```
+cp test/*.pfx /etc/unionpay/
+cp test/*.cer /etc/unionpay/
+```
+
 ### Example
 
 Identification verification
