@@ -26,5 +26,5 @@ Package.onTest(function(api) {
   api.use('tinytest');
   api.use('momentjs:moment');
   api.use('lsun:unionpay');
-  api.addFiles('unionpay-tests.js');
+  api.addFiles('test/unionpay-tests.js');
 });
