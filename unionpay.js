@@ -58,7 +58,7 @@ UnionPay = class {
     return ans;
   }
 
-  _hex2int(h) {
+  _hex2dec(h) {
     function carry(x) {
       var i = 0;
       while (i < x.length) {
@@ -95,7 +95,7 @@ UnionPay = class {
     var x509 = p12.getBags({bagType: forge.pki.oids.certBag});
     x509 = _.values(x509)[0][0];
     var sn = x509.cert.serialNumber;
-    sn = this._hex2int(sn);
+    sn = this._hex2dec(sn);
     return sn;
   }
 
