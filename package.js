@@ -1,6 +1,6 @@
 Package.describe({
   name: 'lsun:unionpay',
-  version: '0.0.1',
+  version: '0.0.2',
   // Brief, one-line summary of the package.
   summary: 'Union pay SDK in Meteor',
   // URL to the Git repository containing the source code for this package.
@@ -15,9 +15,9 @@ Package.onUse(function(api) {
   api.use('ecmascript');
   api.use('http');
   api.use('underscore');
-  api.use('momentjs:moment');
-  api.use('lsun:meteor-node-forge');
-  api.addFiles('unionpay.js');
+  api.use('momentjs:moment@2.10.6');
+  api.use('lsun:meteor-node-forge@0.6.35_4');
+  api.addFiles('unionpay.js', ['server']);
   api.export('UnionPay');
 });
 
