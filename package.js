@@ -16,7 +16,7 @@ Package.onUse(function(api) {
   api.use('http');
   api.use('underscore');
   api.use('momentjs:moment@2.10.6');
-  api.use('lsun:meteor-node-forge@0.6.35_4');
+  api.use('lsun:meteor-node-forge@0.6.35_5');
   api.addFiles('unionpay.js', ['server']);
   api.export('UnionPay');
 });
